@@ -1,0 +1,42 @@
+[project]
+project_id = "your-supabase-project-id"
+title = "Personal CRM"
+
+[api]
+# Refer to https://supabase.com/docs/guides/api/keys for more info
+max_request_duration = 30
+default_query_timeout = "10s"
+
+[db]
+# Default timezone for Postgres.
+default_timezone = "UTC"
+
+[realtime]
+enabled = true
+max_bytes_per_second = 1048576
+max_channels_per_client = 128
+max_joins_per_second = 500
+max_presence_tables_per_client = 10
+max_presences_per_client = 100
+max_messages_per_second = 10
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://yourdomain.com"]
+jwt_expiry = 3600
+jwt_secret = "your-super-secret-jwt-token-change-me"
+enable_signup = true
+enable_anonymous_signups = false
+mfa_enabled = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[edge_runtime]
+policy = "per_request"
+
+[functions]
+import_map = "./functions/import_map.json"

@@ -8,14 +8,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
-import { getContact, deleteContact } from '@/app/actions/contacts';
+import { getContact, deleteContact, listContacts } from '@/app/actions/contacts';
 import { listInteractions, createInteraction } from '@/app/actions/interactions';
 import { listTasks, createTask } from '@/app/actions/tasks';
-import { Contact, Interaction, Task } from '@/lib/validation/schemas';
+import {
+  getAllRelationships,
+  getNetworkGraphData,
+  getNetworkStats,
+} from '@/app/actions/relationships';
+import { Contact, Interaction, Task, ContactRelationship } from '@/lib/validation/schemas';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
-import { ArrowLeft, Edit2, Trash2, Plus } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ArrowLeft, Edit2, Trash2, Plus, Network } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { RelationshipManager } from '@/components/relationship-manager';
+import { NetworkGraph } from '@/components/network-graph';
 
 interface ContactDetailPageProps {
   params: {
@@ -27,25 +40,48 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
   const [contact, setContact] = useState<Contact | null>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [allContacts, setAllContacts] = useState<Contact[]>([]);
+  const [relationships, setRelationships] = useState<
+    Array<ContactRelationship & { from_contact?: Contact; to_contact?: Contact }>
+  >([]);
+  const [networkGraphData, setNetworkGraphData] = useState<any>(null);
+  const [networkStats, setNetworkStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [showInteractionDialog, setShowInteractionDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
+  const [showNetworkDialog, setShowNetworkDialog] = useState(false);
 
   const router = useRouter();
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [contactData, interactionData, taskData] = await Promise.all([
+        const [
+          contactData,
+          interactionData,
+          taskData,
+          allContactsData,
+          relationshipsData,
+          graphData,
+          statsData,
+        ] = await Promise.all([
           getContact(params.id),
           listInteractions(params.id),
           listTasks(),
+          listContacts(),
+          getAllRelationships(params.id),
+          getNetworkGraphData(params.id),
+          getNetworkStats(params.id),
         ]);
 
         setContact(contactData);
         setInteractions(interactionData || []);
         setTasks(taskData?.filter((t) => t.contact_id === params.id) || []);
+        setAllContacts(allContactsData || []);
+        setRelationships(relationshipsData || []);
+        setNetworkGraphData(graphData);
+        setNetworkStats(statsData);
       } catch (error) {
         console.error('Failed to load contact:', error);
         toast.error('Failed to load contact');
@@ -96,6 +132,22 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
     } catch (error) {
       console.error('Failed to add interaction:', error);
       toast.error('Failed to log interaction');
+    }
+  };
+
+  const handleRelationshipChange = async () => {
+    try {
+      const relationshipsData = await getAllRelationships(params.id);
+      const graphData = await getNetworkGraphData(params.id);
+      const statsData = await getNetworkStats(params.id);
+
+      setRelationships(relationshipsData || []);
+      setNetworkGraphData(graphData);
+      setNetworkStats(statsData);
+      toast.success('Network updated');
+    } catch (error) {
+      console.error('Failed to update relationships:', error);
+      toast.error('Failed to update relationships');
     }
   };
 
@@ -297,6 +349,68 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
           <div className="bg-white p-6 rounded-lg border border-border mb-8">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Notes</h2>
             <p className="text-gray-700 whitespace-pre-wrap">{contact.notes}</p>
+          </div>
+        )}
+
+        {/* Network Connections */}
+        <div className="bg-white p-6 rounded-lg border border-border mb-8">
+          <RelationshipManager
+            contactId={contact.id}
+            allContacts={allContacts}
+            relationships={relationships}
+            onRelationshipAdded={handleRelationshipChange}
+            onRelationshipDeleted={handleRelationshipChange}
+          />
+        </div>
+
+        {/* Network Statistics and Graph */}
+        {networkStats && (
+          <div className="bg-white p-6 rounded-lg border border-border mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-gray-900">Network Overview</h2>
+              <Dialog open={showNetworkDialog} onOpenChange={setShowNetworkDialog}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Network className="w-4 h-4 mr-2" />
+                    View Graph
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Network Visualization</DialogTitle>
+                  </DialogHeader>
+                  {networkGraphData && (
+                    <NetworkGraph
+                      nodes={networkGraphData.nodes}
+                      edges={networkGraphData.edges}
+                      targetContactId={contact.id}
+                      interactive={true}
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">{networkStats.totalConnections}</p>
+                <p className="text-sm text-gray-600">Total Connections</p>
+              </div>
+              <div className="p-3 bg-green-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">{networkStats.peopleTheyKnow}</p>
+                <p className="text-sm text-gray-600">People They Know</p>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <p className="text-2xl font-bold text-purple-600">
+                  {networkStats.peopleWhoKnowThem}
+                </p>
+                <p className="text-sm text-gray-600">People Who Know Them</p>
+              </div>
+              <div className="p-3 bg-orange-50 rounded-lg">
+                <p className="text-2xl font-bold text-orange-600">{networkStats.referrersCount}</p>
+                <p className="text-sm text-gray-600">Referrers</p>
+              </div>
+            </div>
           </div>
         )}
 

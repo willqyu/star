@@ -124,3 +124,22 @@ export const UserSettingsUpdateSchema = z.object({
 
 export type UserSettings = z.infer<typeof UserSettingsSchema>;
 export type UserSettingsInput = z.infer<typeof UserSettingsUpdateSchema>;
+
+// Contact Relationship Schemas
+export const ContactRelationshipFormSchema = z.object({
+  from_contact_id: z.string().uuid('From contact is required'),
+  to_contact_id: z.string().uuid('To contact is required'),
+  relationship_type: z.enum(['referred_by', 'knows', 'works_with', 'friend']),
+  notes: z.string().optional(),
+});
+
+export const ContactRelationshipSchema = ContactRelationshipFormSchema.extend({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  created_at: z.date(),
+  updated_at: z.date(),
+});
+
+export type ContactRelationship = z.infer<typeof ContactRelationshipSchema>;
+export type ContactRelationshipInput = z.infer<typeof ContactRelationshipFormSchema>;
+

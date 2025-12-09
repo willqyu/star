@@ -221,6 +221,33 @@ export type Database = {
           updated_at?: string;
         };
       };
+      contact_relationships: {
+        Row: {
+          id: string;
+          user_id: string;
+          from_contact_id: string;
+          to_contact_id: string;
+          relationship_type: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          from_contact_id: string;
+          to_contact_id: string;
+          relationship_type: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          relationship_type?: string;
+          notes?: string | null;
+          updated_at?: string;
+        };
+      };
     };
     Views: {};
     Functions: {};

@@ -1,9 +1,10 @@
-import { createServerClient, serialize } from '@supabase/auth-helpers-nextjs';
+// lib/supabase/server.ts
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { Database } from '@/lib/database.types';
+import type { Database } from '@/types/supabase';
 
-export async function createClient() {
-  const cookieStore = await cookies();
+export function createClient() {
+  const cookieStore = cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,7 +20,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Handle the case where cookies cannot be set in server components
+            // Handle cookie setting errors
           }
         },
       },

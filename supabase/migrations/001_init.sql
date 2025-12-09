@@ -1,6 +1,6 @@
 -- Enable pgvector and pg_trgm extensions for similarity search and FTS
 create extension if not exists "pg_trgm";
-create extension if not exists "pgvector";
+create extension if not exists "vector";
 
 -- Create tables
 create table public.contacts (

@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="text-center px-4">
+      <div className="text-center px-4 w-full">
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Personal CRM
+          STAR: Personal CRM
         </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-2xl">
+        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Never lose track of your relationships. Manage contacts, log interactions,
           track tasks, and automate reminders—all in one place.
         </p>

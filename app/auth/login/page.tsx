@@ -45,7 +45,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Personal CRM</h1>
+          <h1 className="text-3xl font-bold text-gray-900">STAR</h1>
           <p className="text-gray-600 mt-2">Sign in to your account</p>
         </div>
 
@@ -89,13 +89,6 @@ export default function LoginPage() {
             <Link href="/auth/signup" className="text-blue-600 hover:underline font-medium">
               Sign up
             </Link>
-          </p>
-        </div>
-
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <p className="text-center text-sm text-gray-500">
-            Demo credentials (if set up):{' '}
-            <code className="bg-gray-100 px-2 py-1 rounded text-xs">demo@example.com</code>
           </p>
         </div>
       </div>

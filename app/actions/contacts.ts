@@ -84,10 +84,8 @@ export async function listContacts(): Promise<Contact[]> {
     contactsCacheTimestamp[user.id] &&
     now - contactsCacheTimestamp[user.id] < 10 * 60 * 1000
   ) {
-    console.log(contactsCache[user.id]);
     return contactsCache[user.id]!;
   }
-  console.log("Fetching contacts from database");
   const contacts = await contactUtils.getContacts(user.id, supabase);
   contactsCache[user.id] = contacts;
   contactsCacheTimestamp[user.id] = now;

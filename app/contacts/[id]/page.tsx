@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Button } from '@/components/ui/button';
@@ -28,12 +28,13 @@ import {
 import { RelationshipManager } from '@/components/relationship-manager';
 
 interface ContactDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function ContactDetailPage({ params }: ContactDetailPageProps) {
+  const { id } = use(params);
   const [contact, setContact] = useState<Contact | null>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -58,16 +59,16 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
           allContactsData,
           relationshipsData,
         ] = await Promise.all([
-          getContact(params.id),
-          listInteractions(params.id),
+          getContact(id),
+          listInteractions(id),
           listTasks(),
           listContacts(),
-          getAllRelationships(params.id),
+          getAllRelationships(id),
         ]);
 
         setContact(contactData);
         setInteractions(interactionData || []);
-        setTasks(taskData?.filter((t) => t.contact_id === params.id) || []);
+        setTasks(taskData?.filter((t) => t.contact_id === id) || []);
         setAllContacts(allContactsData || []);
         setRelationships(relationshipsData || []);
       } catch (error) {
@@ -79,7 +80,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
     };
 
     loadData();
-  }, [params.id]);
+  }, [id]);
 
   const handleDelete = async () => {
     if (!contact) return;

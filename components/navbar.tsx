@@ -25,7 +25,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-8">
             <Link href="/dashboard" className="font-bold text-xl text-blue-600">
-              CRM
+              STAR
             </Link>
 
             <div className="hidden md:flex gap-4">

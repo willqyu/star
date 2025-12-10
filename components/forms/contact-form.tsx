@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,10 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ContactFormSchema, ContactInput } from '@/lib/validation/schemas';
-import { createContact, updateContact } from '@/app/actions/contacts';
+import { ContactFormSchema, ContactInput, Contact } from '@/lib/validation/schemas';
+import { createContact, updateContact, listContacts } from '@/app/actions/contacts';
 import { toast } from 'sonner';
-import { Contact } from '@/lib/validation/schemas';
 import { X } from 'lucide-react';
 
 interface ContactFormProps {
@@ -31,6 +30,7 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
   const [loading, setLoading] = useState(false);
   const [tags, setTags] = useState<string[]>(contact?.tags || []);
   const [tagInput, setTagInput] = useState('');
+  const [allContacts, setAllContacts] = useState<Contact[]>([]);
 
   const {
     register,
@@ -51,8 +51,26 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
       timezone: 'UTC',
       preferred_channel: 'email',
       notes: '',
+      referred_by_id: '',
     },
   });
+
+  // Load all contacts for the referred_by dropdown (only in create mode)
+  useEffect(() => {
+    if (mode === 'create') {
+      const loadContacts = async () => {
+        try {
+          const contacts = await listContacts();
+          setAllContacts(contacts || []);
+        } catch (error) {
+          console.error('Failed to load contacts:', error);
+          // Still set to empty array so field shows even if loading fails
+          setAllContacts([]);
+        }
+      };
+      loadContacts();
+    }
+  }, [mode]);
 
   const onSubmit = async (data: ContactInput) => {
     setLoading(true);
@@ -232,6 +250,33 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
           className="mt-1"
         />
       </div>
+
+      {mode === 'create' && (
+        <div>
+          <Label htmlFor="referred_by_id">Referred By (Optional)</Label>
+          <select
+            id="referred_by_id"
+            disabled={loading}
+            {...register('referred_by_id')}
+            className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
+          >
+            <option value="">Select a contact...</option>
+            {allContacts.length > 0 ? (
+              allContacts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.first_name} {c.last_name}
+                  {c.company ? ` (${c.company})` : ''}
+                </option>
+              ))
+            ) : (
+              <option disabled>Loading contacts...</option>
+            )}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            The person who referred this contact to you
+          </p>
+        </div>
+      )}
 
       <div>
         <Label htmlFor="tags">Tags</Label>

@@ -1,44 +1,76 @@
--- Add relationships table to track backlinks
--- This table records connections between contacts:
--- - who referred someone to you (referred_by)
--- - who they know (knows)
+-- 0) Ensure extension for gen_random_uuid exists (if you use it)
+-- CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-create table public.contact_relationships (
-  id uuid not null default gen_random_uuid() primary key,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  from_contact_id uuid not null references public.contacts(id) on delete cascade,
-  to_contact_id uuid not null references public.contacts(id) on delete cascade,
-  relationship_type text not null, -- 'referred_by', 'knows', 'works_with', 'friend'
+-- 1) Create the table (omit the check with subqueries)
+CREATE TABLE IF NOT EXISTS public.contact_relationships (
+  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  from_contact_id uuid NOT NULL REFERENCES public.contacts(id) ON DELETE CASCADE,
+  to_contact_id uuid NOT NULL REFERENCES public.contacts(id) ON DELETE CASCADE,
+  relationship_type text NOT NULL,
   notes text,
-  created_at timestamp with time zone default now() not null,
-  updated_at timestamp with time zone default now() not null,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz DEFAULT now() NOT NULL,
   
-  -- Ensure contacts are different
-  constraint different_contacts check (from_contact_id != to_contact_id),
-  -- Ensure no duplicate relationships in the same direction
-  constraint unique_relationship unique(from_contact_id, to_contact_id, relationship_type),
-  -- Ensure all contacts belong to the same user
-  constraint same_user_contacts check (
-    (select user_id from contacts where id = from_contact_id) = 
-    (select user_id from contacts where id = to_contact_id)
-  )
+  CONSTRAINT different_contacts CHECK (from_contact_id != to_contact_id),
+  CONSTRAINT unique_relationship UNIQUE (from_contact_id, to_contact_id, relationship_type)
+  -- Note: same_user_contacts CHECK with subqueries is not allowed in Postgres
 );
 
--- Create indexes for performance
+-- 2) Create or replace the trigger function that enforces both contacts belong to same user
+CREATE OR REPLACE FUNCTION public.validate_contact_relationship_user()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  user_from uuid;
+  user_to   uuid;
+BEGIN
+  -- fetch user_id for from_contact_id and to_contact_id
+  SELECT user_id INTO user_from FROM public.contacts WHERE id = NEW.from_contact_id;
+  SELECT user_id INTO user_to   FROM public.contacts WHERE id = NEW.to_contact_id;
+
+  -- ensure both contacts exist
+  IF user_from IS NULL THEN
+    RAISE EXCEPTION USING MESSAGE = format('from_contact_id % does not exist in public.contacts', NEW.from_contact_id);
+  END IF;
+
+  IF user_to IS NULL THEN
+    RAISE EXCEPTION USING MESSAGE = format('to_contact_id % does not exist in public.contacts', NEW.to_contact_id);
+  END IF;
+
+  -- ensure both contacts belong to the same user
+  IF user_from <> user_to THEN
+    RAISE EXCEPTION USING MESSAGE = format(
+      'Contacts % and % do not belong to the same user (users: % vs %)',
+      NEW.from_contact_id, NEW.to_contact_id, user_from, user_to
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+-- 3) Drop existing trigger (if any) and create the trigger
+DROP TRIGGER IF EXISTS trg_validate_contact_relationship_user ON public.contact_relationships;
+
+CREATE TRIGGER trg_validate_contact_relationship_user
+BEFORE INSERT OR UPDATE ON public.contact_relationships
+FOR EACH ROW
+EXECUTE FUNCTION public.validate_contact_relationship_user();
+
+-- 4) Optional: index to speed contact -> user lookups used by the trigger
+CREATE INDEX IF NOT EXISTS idx_contacts_user_id ON public.contacts(user_id);
 create index idx_relationships_user_id on public.contact_relationships(user_id);
 create index idx_relationships_from_contact on public.contact_relationships(from_contact_id);
 create index idx_relationships_to_contact on public.contact_relationships(to_contact_id);
 create index idx_relationships_type on public.contact_relationships(relationship_type);
-create index idx_relationships_from_to on public.contact_relationships(from_contact_id, to_contact_id);
 
--- Create trigger for updated_at
 create trigger update_contact_relationships_updated_at before update on public.contact_relationships
   for each row execute function update_updated_at_column();
 
--- Enable RLS on contact_relationships table
 alter table public.contact_relationships enable row level security;
 
--- Create RLS policies
 create policy "Users can view their own contact relationships"
   on public.contact_relationships for select
   using (auth.uid() = user_id);

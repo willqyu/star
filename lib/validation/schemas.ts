@@ -13,6 +13,7 @@ export const ContactFormSchema = z.object({
   timezone: z.string().optional(),
   preferred_channel: z.enum(['email', 'phone', 'linkedin', 'in_person']).optional(),
   notes: z.string().optional(),
+  referred_by_id: z.string().uuid().optional().or(z.literal('')),
 });
 
 export const ContactSchema = ContactFormSchema.extend({

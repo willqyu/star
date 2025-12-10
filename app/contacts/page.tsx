@@ -5,23 +5,70 @@ import { Navbar } from '@/components/navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Network } from 'lucide-react';
 import { listContacts, searchContacts } from '@/app/actions/contacts';
+import { getAllNetworkRelationships } from '@/app/actions/relationships';
 import { Contact } from '@/lib/validation/schemas';
 import { formatDistanceToNow } from 'date-fns';
+import { GlobalNetworkGraph } from '@/components/global-network-graph';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [graphData, setGraphData] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] });
+  const [showGraphDialog, setShowGraphDialog] = useState(false);
 
   useEffect(() => {
     const loadContacts = async () => {
       try {
-        const data = await listContacts();
-        setContacts(data);
-        setFilteredContacts(data);
+        const [contactsData, relationshipsData] = await Promise.all([
+          listContacts(),
+          getAllNetworkRelationships(),
+        ]);
+
+        setContacts(contactsData);
+        setFilteredContacts(contactsData);
+
+        // Build graph data from relationships
+        if (relationshipsData && relationshipsData.length > 0) {
+          const nodesMap = new Map();
+
+          // Add all contacts as nodes
+          contactsData.forEach((contact) => {
+            nodesMap.set(contact.id, {
+              id: contact.id,
+              name: `${contact.first_name} ${contact.last_name}`,
+              email: contact.email,
+              company: contact.company,
+            });
+          });
+
+          // Build edges from relationships
+          const edges = relationshipsData.map((rel: any) => ({
+            id: rel.id,
+            source: rel.from_contact_id,
+            target: rel.to_contact_id,
+            type: rel.relationship_type,
+            notes: rel.notes,
+          }));
+
+          setGraphData({
+            nodes: Array.from(nodesMap.values()),
+            edges,
+          });
+        } else if (contactsData.length > 0) {
+          // No relationships, just show contacts as nodes
+          const nodes = contactsData.map((contact) => ({
+            id: contact.id,
+            name: `${contact.first_name} ${contact.last_name}`,
+            email: contact.email,
+            company: contact.company,
+          }));
+          setGraphData({ nodes, edges: [] });
+        }
       } catch (error) {
         console.error('Failed to load contacts:', error);
       } finally {
@@ -70,12 +117,32 @@ export default function ContactsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
             <p className="text-gray-600 mt-1">Manage and track your relationships</p>
           </div>
-          <Link href="/contacts/new">
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              New Contact
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Dialog open={showGraphDialog} onOpenChange={setShowGraphDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Network className="w-4 h-4 mr-2" />
+                  Network Graph
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl">
+                <DialogHeader>
+                  <DialogTitle>Your Contact Network</DialogTitle>
+                </DialogHeader>
+                <GlobalNetworkGraph
+                  nodes={graphData.nodes}
+                  edges={graphData.edges}
+                  interactive={true}
+                />
+              </DialogContent>
+            </Dialog>
+            <Link href="/contacts/new">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                New Contact
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="mb-6 relative">

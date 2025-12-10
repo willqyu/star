@@ -359,3 +359,44 @@ export async function getNetworkStats(contactId: string) {
 
   return data;
 }
+
+/**
+ * Get all relationships for the entire contact network (for global graph visualization)
+ */
+export async function getAllNetworkRelationships() {
+  const supabase = await createClient();
+
+  const { data: relationships, error } = await supabase
+    .from('contact_relationships')
+    .select(
+      `
+      id,
+      from_contact_id,
+      to_contact_id,
+      relationship_type,
+      notes,
+      from_contact:from_contact_id (
+        id,
+        first_name,
+        last_name,
+        email,
+        company
+      ),
+      to_contact:to_contact_id (
+        id,
+        first_name,
+        last_name,
+        email,
+        company
+      )
+    `
+    )
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching all relationships:', error);
+    throw error;
+  }
+
+  return relationships;
+}

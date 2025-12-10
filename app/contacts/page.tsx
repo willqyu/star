@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,13 @@ export default function ContactsPage() {
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const loadContacts = async () => {
       try {
         const contactsData = await listContacts();
-        console.log("Loaded contacts:", contactsData);
         setContacts(contactsData);
         setFilteredContacts(contactsData);
       } catch (error) {
@@ -34,21 +35,36 @@ export default function ContactsPage() {
   }, []);
 
   useEffect(() => {
-    const handleSearch = async () => {
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Set new timer for debounced search
+    debounceTimer.current = setTimeout(async () => {
       if (!searchQuery.trim()) {
         setFilteredContacts(contacts);
+        setIsSearching(false);
         return;
       }
 
       try {
+        setIsSearching(true);
         const results = await searchContacts(searchQuery);
         setFilteredContacts(results);
       } catch (error) {
         console.error('Search failed:', error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // 300ms debounce delay
+
+    // Cleanup timer on unmount
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
       }
     };
-
-    handleSearch();
   }, [searchQuery, contacts]);
 
   if (loading) {

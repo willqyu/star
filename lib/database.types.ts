@@ -76,6 +76,7 @@ export type Database = {
           type: string;
           timestamp: string;
           notes: string | null;
+          location: string | null;
           attachments: string[];
           created_at: string;
         };
@@ -86,6 +87,7 @@ export type Database = {
           type: string;
           timestamp?: string;
           notes?: string | null;
+          location?: string | null;
           attachments?: string[];
           created_at?: string;
         };
@@ -93,6 +95,7 @@ export type Database = {
           type?: string;
           timestamp?: string;
           notes?: string | null;
+          location?: string | null;
           attachments?: string[];
         };
       };

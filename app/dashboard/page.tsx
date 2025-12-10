@@ -3,6 +3,7 @@ import { listContacts } from '@/app/actions/contacts';
 import { listTasks } from '@/app/actions/tasks';
 import { listRecentInteractions } from '@/app/actions/interactions';
 import { Button } from '@/components/ui/button';
+import { QuickInteractionLogger } from '@/components/quick-interaction-logger';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Plus, Calendar, MessageSquare, Phone } from 'lucide-react';
@@ -54,13 +55,16 @@ export default async function DashboardPage() {
           </div>
 
           <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-100">
-            <div className="text-sm font-medium text-blue-600">Quick Add</div>
-            <Link href="/contacts/new">
-              <Button className="mt-2" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                New Contact
-              </Button>
-            </Link>
+            <div className="text-sm font-medium text-blue-600 mb-2">Quick Add</div>
+            <div className="space-y-2">
+              <QuickInteractionLogger contacts={contacts} />
+              <Link href="/contacts/new" className="block">
+                <Button variant="outline" size="sm" className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Contact
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
 

@@ -3,12 +3,21 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
-import { Plus, CheckCircle2, Circle, AlertCircle } from 'lucide-react';
-import { listTasks, completeTask, deleteTask, snoozeTask } from '@/app/actions/tasks';
+import { Plus, CheckCircle2, Circle, AlertCircle, Edit2 } from 'lucide-react';
+import { listTasks, completeTask, deleteTask, snoozeTask, updateTask } from '@/app/actions/tasks';
 import { Task } from '@/lib/validation/schemas';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 type TaskStatus = 'all' | 'open' | 'completed';
 
@@ -17,6 +26,9 @@ export default function TasksPage() {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [status, setStatus] = useState<TaskStatus>('open');
   const [loading, setLoading] = useState(true);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<any>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -76,6 +88,44 @@ export default function TasksPage() {
     } catch (error) {
       console.error('Failed to delete task:', error);
       toast.error('Failed to delete task');
+    }
+  };
+
+  const handleEditOpen = (task: Task) => {
+    setEditingTaskId(task.id);
+    setEditFormData({
+      title: task.title,
+      description: task.description || '',
+      priority: task.priority,
+      due_at: task.due_at ? new Date(task.due_at).toISOString().slice(0, 16) : '',
+      status: task.status,
+    });
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingTaskId) return;
+
+    setIsSubmitting(true);
+    try {
+      const updatedTask = await updateTask(editingTaskId, {
+        title: editFormData.title,
+        description: editFormData.description || undefined,
+        priority: parseInt(editFormData.priority),
+        due_at: editFormData.due_at ? new Date(editFormData.due_at) : undefined,
+        status: editFormData.status,
+      });
+
+      setTasks((prev) =>
+        prev.map((t) => (t.id === editingTaskId ? updatedTask : t))
+      );
+
+      setEditingTaskId(null);
+      toast.success('Task updated');
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      toast.error('Failed to update task');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -216,6 +266,14 @@ export default function TasksPage() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => handleEditOpen(task)}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           onClick={() => handleSnooze(task.id)}
                         >
                           Snooze
@@ -237,6 +295,103 @@ export default function TasksPage() {
             ))}
           </div>
         )}
+
+        {/* Edit Task Modal */}
+        <Dialog open={!!editingTaskId} onOpenChange={(open) => !open && setEditingTaskId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Task</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-title">Title</Label>
+                <Input
+                  id="edit-title"
+                  value={editFormData.title}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, title: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editFormData.description}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, description: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-priority">Priority</Label>
+                  <select
+                    id="edit-priority"
+                    value={editFormData.priority}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, priority: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
+                  >
+                    <option value="0">Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-due-at">Due Date</Label>
+                  <Input
+                    id="edit-due-at"
+                    type="datetime-local"
+                    value={editFormData.due_at}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, due_at: e.target.value })
+                    }
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-status">Status</Label>
+                <select
+                  id="edit-status"
+                  value={editFormData.status}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, status: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
+                >
+                  <option value="open">Open</option>
+                  <option value="completed">Completed</option>
+                  <option value="snoozed">Snoozed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingTaskId(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleEditSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </>
   );

@@ -12,7 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
@@ -164,24 +163,28 @@ export function RelationshipManager({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="direction">Connection Direction</Label>
-                <Select
+                <select
+                  id="direction"
                   value={formData.direction}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, direction: value })
+                  onChange={(e: any) =>
+                    setFormData({ ...formData, direction: e.target.value })
                   }
+                  className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
                 >
                   <option value="outgoing">This person knows...</option>
                   <option value="incoming">This person was referred by...</option>
-                </Select>
+                </select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="related-contact">Select Contact</Label>
-                <Select
+                <select
+                  id="related-contact"
                   value={formData.relatedContactId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, relatedContactId: value })
+                  onChange={(e) =>
+                    setFormData({ ...formData, relatedContactId: e.target.value })
                   }
+                  className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
                 >
                   <option value="">Choose a contact...</option>
                   {availableContacts.map((contact) => (
@@ -190,22 +193,24 @@ export function RelationshipManager({
                       {contact.company ? ` (${contact.company})` : ''}
                     </option>
                   ))}
-                </Select>
+                </select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="type">Relationship Type</Label>
-                <Select
+                <select
+                  id="type"
                   value={formData.type}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, type: value })
+                  onChange={(e: any) =>
+                    setFormData({ ...formData, type: e.target.value })
                   }
+                  className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
                 >
                   <option value="knows">Knows</option>
                   <option value="works_with">Works with</option>
                   <option value="friend">Friend</option>
                   <option value="referred_by">Referred by</option>
-                </Select>
+                </select>
               </div>
 
               <div className="space-y-2">

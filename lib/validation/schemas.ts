@@ -34,6 +34,7 @@ export const InteractionFormSchema = z.object({
   contact_id: z.string().uuid('Contact is required'),
   type: z.enum(['email', 'call', 'meeting', 'message', 'linkedin', 'other']),
   notes: z.string().optional(),
+  location: z.string().optional(),
   attachments: z.array(z.string()).optional(),
 });
 

@@ -15,7 +15,7 @@ import {
   getAllRelationships,
 } from '@/app/actions/relationships';
 import { Contact, Interaction, Task, ContactRelationship } from '@/lib/validation/schemas';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, addDays } from 'date-fns';
 import { toast } from 'sonner';
 import { ArrowLeft, Edit2, Trash2, Plus } from 'lucide-react';
 import {
@@ -108,6 +108,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
         contact_id: contact.id,
         type: formData.get('type') as string,
         notes: formData.get('notes') as string,
+        location: formData.get('location') as string | undefined,
       });
 
       // Reload interactions
@@ -163,6 +164,30 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
     } catch (error) {
       console.error('Failed to add task:', error);
       toast.error('Failed to create task');
+    }
+  };
+
+  const createQuickFollowUp = async (daysFromNow: number, title: string) => {
+    if (!contact) return;
+
+    try {
+      const dueDate = addDays(new Date(), daysFromNow);
+      await createTask({
+        title,
+        description: `Quick follow-up with ${contact.first_name}`,
+        contact_id: contact.id,
+        due_at: dueDate,
+        priority: 2, // High priority
+      });
+
+      // Reload tasks
+      const updated = await listTasks();
+      setTasks(updated?.filter((t) => t.contact_id === contact.id) || []);
+
+      toast.success(`Follow-up task created for ${daysFromNow === 1 ? '1 day' : daysFromNow === 7 ? '1 week' : '1 month'} from now`);
+    } catch (error) {
+      console.error('Failed to create quick follow-up:', error);
+      toast.error('Failed to create follow-up task');
     }
   };
 
@@ -385,6 +410,16 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                   </div>
 
                   <div>
+                    <Label htmlFor="location">Location (Optional)</Label>
+                    <Input
+                      id="location"
+                      name="location"
+                      placeholder="e.g., Coffee shop, Google Meet, Zoom, or full address"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
                     <Label htmlFor="notes">Notes</Label>
                     <Textarea
                       id="notes"
@@ -417,6 +452,11 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                       {formatDistanceToNow(new Date(interaction.timestamp), { addSuffix: true })}
                     </span>
                   </div>
+                  {(interaction as any).location && (
+                    <p className="text-sm text-gray-600 mb-1">
+                      <span className="font-medium">Location:</span> {(interaction as any).location}
+                    </p>
+                  )}
                   {interaction.notes && (
                     <p className="text-gray-700">{interaction.notes}</p>
                   )}
@@ -430,68 +470,91 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
         <div className="bg-white p-6 rounded-lg border border-border">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-900">Related Tasks</h2>
-            <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Task
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Task for {contact.first_name}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddTask} className="space-y-4">
-                  <div>
-                    <Label htmlFor="task-title">Task Title</Label>
-                    <Input
-                      id="task-title"
-                      name="title"
-                      placeholder="Follow up with..."
-                      required
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="task-description">Description</Label>
-                    <Textarea
-                      id="task-description"
-                      name="description"
-                      placeholder="Any additional details"
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => createQuickFollowUp(1, `Follow up with ${contact.first_name}`)}
+              >
+                +1 day
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => createQuickFollowUp(7, `Follow up with ${contact.first_name}`)}
+              >
+                +1 week
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => createQuickFollowUp(30, `Follow up with ${contact.first_name}`)}
+              >
+                +1 month
+              </Button>
+              <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Task
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Task for {contact.first_name}</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleAddTask} className="space-y-4">
                     <div>
-                      <Label htmlFor="task-priority">Priority</Label>
-                      <select
-                        id="task-priority"
-                        name="priority"
-                        className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
-                      >
-                        <option value="0">Low</option>
-                        <option value="1">Medium</option>
-                        <option value="2">High</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="task-due-at">Due Date</Label>
+                      <Label htmlFor="task-title">Task Title</Label>
                       <Input
-                        id="task-due-at"
-                        type="datetime-local"
-                        name="due_at"
+                        id="task-title"
+                        name="title"
+                        placeholder="Follow up with..."
+                        required
                         className="mt-1"
                       />
                     </div>
-                  </div>
 
-                  <Button type="submit">Create Task</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    <div>
+                      <Label htmlFor="task-description">Description</Label>
+                      <Textarea
+                        id="task-description"
+                        name="description"
+                        placeholder="Any additional details"
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="task-priority">Priority</Label>
+                        <select
+                          id="task-priority"
+                          name="priority"
+                          className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
+                        >
+                          <option value="0">Low</option>
+                          <option value="1">Medium</option>
+                          <option value="2">High</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="task-due-at">Due Date</Label>
+                        <Input
+                          id="task-due-at"
+                          type="datetime-local"
+                          name="due_at"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    <Button type="submit">Create Task</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
           {tasks.length === 0 ? (

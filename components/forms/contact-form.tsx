@@ -8,13 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ContactFormSchema, ContactInput, Contact } from '@/lib/validation/schemas';
 import { createContact, updateContact, listContacts } from '@/app/actions/contacts';
 import { TIMEZONES } from '@/lib/utils/timezones';
@@ -37,8 +30,6 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
-    watch,
   } = useForm<ContactInput>({
     resolver: zodResolver(ContactFormSchema),
     defaultValues: contact || {

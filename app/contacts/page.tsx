@@ -15,7 +15,6 @@ export default function ContactsPage() {
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -53,18 +52,14 @@ export default function ContactsPage() {
     debounceTimer.current = setTimeout(async () => {
       if (!searchQuery.trim()) {
         setFilteredContacts(contacts);
-        setIsSearching(false);
         return;
       }
 
       try {
-        setIsSearching(true);
         const results = await searchContacts(searchQuery);
         setFilteredContacts(results);
       } catch (error) {
         console.error('Search failed:', error);
-      } finally {
-        setIsSearching(false);
       }
     }, 300); // 300ms debounce delay
 

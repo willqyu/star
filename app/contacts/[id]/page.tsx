@@ -44,7 +44,6 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
     Array<ContactRelationship & { from_contact?: Contact; to_contact?: Contact }>
   >([]);
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
   const [showInteractionDialog, setShowInteractionDialog] = useState(false);
   const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<Interaction>>({});
@@ -187,13 +186,8 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
 
   const handleRelationshipChange = async () => {
     try {
-      const relationshipsData = await getAllRelationships(params.id);
-      const graphData = await getNetworkGraphData(params.id);
-      const statsData = await getNetworkStats(params.id);
-
+      const relationshipsData = await getAllRelationships(id);
       setRelationships(relationshipsData || []);
-      setNetworkGraphData(graphData);
-      setNetworkStats(statsData);
       toast.success('Network updated');
     } catch (error) {
       console.error('Failed to update relationships:', error);

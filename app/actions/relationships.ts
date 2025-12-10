@@ -134,15 +134,15 @@ export async function createRelationship(input: ContactRelationshipInput) {
     throw new Error('Not authenticated');
   }
 
-  const { data, error } = await supabase
-    .from('contact_relationships')
-    .insert({
+  const { data, error } = await (supabase
+    .from('contact_relationships') as any)
+    .insert([{
       user_id: user.id,
       from_contact_id: input.from_contact_id,
       to_contact_id: input.to_contact_id,
       relationship_type: input.relationship_type,
       notes: input.notes || null,
-    })
+    }])
     .select();
 
   if (error) {
@@ -166,8 +166,8 @@ export async function updateRelationship(
   if (input.relationship_type) updateData.relationship_type = input.relationship_type;
   if (input.notes !== undefined) updateData.notes = input.notes;
 
-  const { data, error } = await supabase
-    .from('contact_relationships')
+  const { data, error } = await (supabase
+    .from('contact_relationships') as any)
     .update(updateData)
     .eq('id', relationshipId)
     .select();
@@ -202,8 +202,8 @@ export async function getNetworkGraphData(contactId: string) {
   const supabase = await createClient();
 
   // Get the target contact
-  const { data: targetContact, error: contactError } = await supabase
-    .from('contacts')
+  const { data: targetContact, error: contactError } = await (supabase
+    .from('contacts') as any)
     .select('*')
     .eq('id', contactId)
     .single();
@@ -213,8 +213,8 @@ export async function getNetworkGraphData(contactId: string) {
   }
 
   // Get all relationships for this contact
-  const { data: relationships, error: relationshipsError } = await supabase
-    .from('contact_relationships')
+  const { data: relationships, error: relationshipsError } = await (supabase
+    .from('contact_relationships') as any)
     .select(
       `
       id,
@@ -263,7 +263,7 @@ export async function getNetworkGraphData(contactId: string) {
     notes?: string;
   }> = [];
 
-  relationships?.forEach((rel) => {
+  relationships?.forEach((rel: any) => {
     const fromId = rel.from_contact_id;
     const toId = rel.to_contact_id;
 
@@ -347,7 +347,7 @@ export async function getNetworkStats(contactId: string) {
 
     const referrersCount = relationships.filter(
       (r) => r.to_contact_id === contactId && r.relationship_type === 'referred_by'
-    ).size;
+    ).length;
 
     return {
       peopleTheyKnow,

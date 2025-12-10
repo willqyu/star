@@ -1,15 +1,17 @@
 import { Navbar } from '@/components/navbar';
 import { ContactForm } from '@/components/forms/contact-form';
 import { getContact } from '@/app/actions/contacts';
+import { use } from 'react';
 
 interface EditContactPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default async function EditContactPage({ params }: EditContactPageProps) {
-  const contact = await getContact(params.id);
+export default function EditContactPage({ params }: EditContactPageProps) {
+  const { id } = use(params);
+  const contact = use(getContact(id));
 
   if (!contact) {
     return (

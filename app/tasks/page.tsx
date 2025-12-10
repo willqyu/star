@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
-import { Plus, CheckCircle2, Circle, AlertCircle, Edit2 } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Edit2 } from 'lucide-react';
 import { listTasks, completeTask, deleteTask, snoozeTask, updateTask } from '@/app/actions/tasks';
 import { Task } from '@/lib/validation/schemas';
 import { formatDistanceToNow } from 'date-fns';

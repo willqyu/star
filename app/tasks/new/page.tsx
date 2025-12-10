@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { createTask, listTasks } from '@/app/actions/tasks';
+import { createTask } from '@/app/actions/tasks';
 import { listContacts } from '@/app/actions/contacts';
 import { Contact } from '@/lib/validation/schemas';
 import { toast } from 'sonner';

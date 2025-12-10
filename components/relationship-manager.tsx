@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -120,7 +119,6 @@ export function RelationshipManager({
 
   const handleEdit = (rel: ContactRelationship & { from_contact?: Contact; to_contact?: Contact }) => {
     const isOutgoing = rel.from_contact_id === contactId;
-    const relatedContact = isOutgoing ? rel.to_contact : rel.from_contact;
 
     setFormData({
       relatedContactId: isOutgoing ? rel.to_contact_id : rel.from_contact_id,

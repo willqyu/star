@@ -76,8 +76,17 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
     setLoading(true);
 
     try {
+      // Convert empty strings to undefined for optional fields to avoid validation issues
+      const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
+        if (typeof value === 'string' && value === '') {
+          // Don't include empty strings - let backend handle defaults
+          return acc;
+        }
+        return { ...acc, [key]: value };
+      }, {} as Record<string, any>);
+
       const formData = {
-        ...data,
+        ...cleanedData,
         tags,
       };
 

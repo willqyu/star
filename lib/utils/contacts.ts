@@ -109,15 +109,18 @@ export async function updateContact(id: string, input: Partial<ContactInput>): P
   const supabase = await createClient();
 
   // Convert empty strings to null to avoid unique constraint issues
-  const cleanedData = {
-    ...input,
-    ...(input.email !== undefined && {
-      email: input.email && input.email.trim() ? input.email.trim() : null,
-    }),
-    ...(input.linkedin_url !== undefined && {
-      linkedin_url: input.linkedin_url && input.linkedin_url.trim() ? input.linkedin_url.trim() : null,
-    }),
-  };
+  // Also filter out undefined values to only update provided fields
+  const cleanedData: Record<string, any> = {};
+
+  Object.entries(input).forEach(([key, value]) => {
+    if (key === 'email') {
+      cleanedData.email = value && typeof value === 'string' && value.trim() ? value.trim() : null;
+    } else if (key === 'linkedin_url') {
+      cleanedData.linkedin_url = value && typeof value === 'string' && value.trim() ? value.trim() : null;
+    } else if (value !== undefined) {
+      cleanedData[key] = value;
+    }
+  });
 
   const { data, error } = await supabase
     .from('contacts')

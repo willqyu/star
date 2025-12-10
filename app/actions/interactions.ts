@@ -36,3 +36,34 @@ export async function listRecentInteractions(limit?: number): Promise<Interactio
 
   return interactionUtils.getRecentInteractions(user.id, limit);
 }
+
+export async function updateInteraction(id: string, formData: unknown): Promise<Interaction> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  const validated = InteractionFormSchema.partial().parse(formData);
+  const interaction = await interactionUtils.updateInteraction(id, validated);
+
+  revalidatePath(`/contacts/${interaction.contact_id}`);
+  revalidatePath('/dashboard');
+
+  return interaction;
+}
+
+export async function deleteInteraction(id: string, contactId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  await interactionUtils.deleteInteraction(id);
+
+  revalidatePath(`/contacts/${contactId}`);
+  revalidatePath('/dashboard');
+}

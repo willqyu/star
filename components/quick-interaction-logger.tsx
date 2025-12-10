@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { createInteraction } from '@/app/actions/interactions';
 import { Contact } from '@/lib/validation/schemas';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
+import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,9 @@ interface QuickInteractionLoggerProps {
 export function QuickInteractionLogger({ contacts, onInteractionCreated }: QuickInteractionLoggerProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useCtrlEnter(formRef);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -71,7 +75,7 @@ export function QuickInteractionLogger({ contacts, onInteractionCreated }: Quick
         <DialogHeader>
           <DialogTitle>Quick Log Interaction</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="contact">Contact *</Label>
             <select

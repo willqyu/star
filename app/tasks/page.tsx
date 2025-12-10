@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { listTasks, completeTask, deleteTask, snoozeTask, updateTask } from '@/a
 import { Task } from '@/lib/validation/schemas';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,9 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<any>({});
+  const editFormRef = useRef<HTMLFormElement>(null);
+
+  useCtrlEnter(editFormRef);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -302,7 +306,7 @@ export default function TasksPage() {
             <DialogHeader>
               <DialogTitle>Edit Task</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <form ref={editFormRef} className="space-y-4">
               <div>
                 <Label htmlFor="edit-title">Title</Label>
                 <Input
@@ -389,7 +393,7 @@ export default function TasksPage() {
                   {isSubmitting ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </main>

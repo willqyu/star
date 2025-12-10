@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
 import {
   createRelationship,
   deleteRelationship,
@@ -47,6 +48,9 @@ export function RelationshipManager({
     notes: '',
     direction: 'outgoing' as 'incoming' | 'outgoing',
   });
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useCtrlEnter(formRef);
 
   // Filter out current contact from available contacts
   const availableContacts = allContacts.filter((c) => c.id !== contactId);
@@ -160,7 +164,7 @@ export function RelationshipManager({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="direction">Connection Direction</Label>
                 <select

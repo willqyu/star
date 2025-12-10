@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
+import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
 import { getContact, deleteContact, listContacts } from '@/app/actions/contacts';
-import { listInteractions, createInteraction } from '@/app/actions/interactions';
+import { listInteractions, createInteraction, updateInteraction, deleteInteraction } from '@/app/actions/interactions';
 import { listTasks, createTask } from '@/app/actions/tasks';
 import {
   getAllRelationships,
@@ -45,7 +46,16 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [showInteractionDialog, setShowInteractionDialog] = useState(false);
+  const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<Interaction>>({});
   const [showTaskDialog, setShowTaskDialog] = useState(false);
+  const [quickFollowUpData, setQuickFollowUpData] = useState<{ daysFromNow: number; title: string } | null>(null);
+
+  const interactionFormRef = useRef<HTMLFormElement>(null);
+  const taskFormRef = useRef<HTMLFormElement>(null);
+
+  useCtrlEnter(interactionFormRef);
+  useCtrlEnter(taskFormRef);
 
   const router = useRouter();
 
@@ -105,23 +115,60 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
 
     const formData = new FormData(e.currentTarget);
     try {
-      await createInteraction({
-        contact_id: contact.id,
-        type: formData.get('type') as string,
-        notes: formData.get('notes') as string,
-        location: formData.get('location') as string | undefined,
-      });
+      if (editingInteractionId) {
+        // Update existing interaction
+        await updateInteraction(editingInteractionId, {
+          type: formData.get('type') as string,
+          notes: formData.get('notes') as string,
+          location: formData.get('location') as string | undefined,
+        });
+        toast.success('Interaction updated');
+      } else {
+        // Create new interaction
+        await createInteraction({
+          contact_id: contact.id,
+          type: formData.get('type') as string,
+          notes: formData.get('notes') as string,
+          location: formData.get('location') as string | undefined,
+        });
+        toast.success('Interaction logged');
+      }
 
       // Reload interactions
       const updated = await listInteractions(contact.id);
       setInteractions(updated || []);
 
       setShowInteractionDialog(false);
-      toast.success('Interaction logged');
-      e.currentTarget.reset();
+      setEditingInteractionId(null);
+      setEditFormData({});
+      if (e.currentTarget) {
+        e.currentTarget.reset();
+      }
     } catch (error) {
-      console.error('Failed to add interaction:', error);
-      toast.error('Failed to log interaction');
+      console.error('Failed to save interaction:', error);
+      toast.error('Failed to save interaction');
+    }
+  };
+
+  const handleEditInteraction = (interaction: Interaction) => {
+    setEditingInteractionId(interaction.id);
+    setEditFormData(interaction);
+    setShowInteractionDialog(true);
+  };
+
+  const handleDeleteInteraction = async (interactionId: string) => {
+    if (!confirm('Are you sure you want to delete this interaction?')) {
+      return;
+    }
+
+    try {
+      await deleteInteraction(interactionId, contact!.id);
+      const updated = await listInteractions(contact!.id);
+      setInteractions(updated || []);
+      toast.success('Interaction deleted');
+    } catch (error) {
+      console.error('Failed to delete interaction:', error);
+      toast.error('Failed to delete interaction');
     }
   };
 
@@ -147,11 +194,21 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
 
     const formData = new FormData(e.currentTarget);
     try {
+      let dueDate: Date | undefined;
+
+      if (quickFollowUpData) {
+        // If this is from a quick follow-up, calculate the due date
+        dueDate = addDays(new Date(), quickFollowUpData.daysFromNow);
+      } else {
+        // Otherwise use the form's due date
+        dueDate = formData.get('due_at') ? new Date(formData.get('due_at') as string) : undefined;
+      }
+
       await createTask({
         title: formData.get('title') as string,
         description: formData.get('description') as string,
         contact_id: contact.id,
-        due_at: formData.get('due_at') ? new Date(formData.get('due_at') as string) : undefined,
+        due_at: dueDate,
         priority: formData.get('priority') ? parseInt(formData.get('priority') as string) : 0,
       });
 
@@ -160,36 +217,20 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
       setTasks(updated?.filter((t) => t.contact_id === contact.id) || []);
 
       setShowTaskDialog(false);
+      setQuickFollowUpData(null);
       toast.success('Task created');
-      e.currentTarget.reset();
+      if (e.currentTarget) {
+        e.currentTarget.reset();
+      }
     } catch (error) {
       console.error('Failed to add task:', error);
       toast.error('Failed to create task');
     }
   };
 
-  const createQuickFollowUp = async (daysFromNow: number, title: string) => {
-    if (!contact) return;
-
-    try {
-      const dueDate = addDays(new Date(), daysFromNow);
-      await createTask({
-        title,
-        description: `Quick follow-up with ${contact.first_name}`,
-        contact_id: contact.id,
-        due_at: dueDate,
-        priority: 2, // High priority
-      });
-
-      // Reload tasks
-      const updated = await listTasks();
-      setTasks(updated?.filter((t) => t.contact_id === contact.id) || []);
-
-      toast.success(`Follow-up task created for ${daysFromNow === 1 ? '1 day' : daysFromNow === 7 ? '1 week' : '1 month'} from now`);
-    } catch (error) {
-      console.error('Failed to create quick follow-up:', error);
-      toast.error('Failed to create follow-up task');
-    }
+  const createQuickFollowUp = (daysFromNow: number, title: string) => {
+    setQuickFollowUpData({ daysFromNow, title });
+    setShowTaskDialog(true);
   };
 
   if (loading) {
@@ -381,7 +422,16 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
         <div className="bg-white p-6 rounded-lg border border-border mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-900">Interactions</h2>
-            <Dialog open={showInteractionDialog} onOpenChange={setShowInteractionDialog}>
+            <Dialog 
+              open={showInteractionDialog} 
+              onOpenChange={(open) => {
+                setShowInteractionDialog(open);
+                if (!open) {
+                  setEditingInteractionId(null);
+                  setEditFormData({});
+                }
+              }}
+            >
               <DialogTrigger asChild>
                 <Button size="sm">
                   <Plus className="w-4 h-4 mr-2" />
@@ -390,17 +440,21 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Log New Interaction</DialogTitle>
+                  <DialogTitle>
+                    {editingInteractionId ? 'Edit Interaction' : 'Log New Interaction'}
+                  </DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleAddInteraction} className="space-y-4">
+                <form ref={interactionFormRef} onSubmit={handleAddInteraction} className="space-y-4">
                   <div>
                     <Label htmlFor="type">Interaction Type</Label>
                     <select
                       id="type"
                       name="type"
                       required
+                      defaultValue={editFormData.type || ''}
                       className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
                     >
+                      <option value="">Select a type...</option>
                       <option value="email">Email</option>
                       <option value="call">Call</option>
                       <option value="meeting">Meeting</option>
@@ -416,6 +470,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                       id="location"
                       name="location"
                       placeholder="e.g., Coffee shop, Google Meet, Zoom, or full address"
+                      defaultValue={editFormData.location || ''}
                       className="mt-1"
                     />
                   </div>
@@ -426,11 +481,14 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                       id="notes"
                       name="notes"
                       placeholder="What did you discuss?"
+                      defaultValue={editFormData.notes || ''}
                       className="mt-1"
                     />
                   </div>
 
-                  <Button type="submit">Log Interaction</Button>
+                  <Button type="submit">
+                    {editingInteractionId ? 'Update Interaction' : 'Log Interaction'}
+                  </Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -449,9 +507,25 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                     <h3 className="font-medium text-gray-900 capitalize">
                       {interaction.type}
                     </h3>
-                    <span className="text-sm text-gray-500">
-                      {formatDistanceToNow(new Date(interaction.timestamp), { addSuffix: true })}
-                    </span>
+                    <div className="flex gap-2">
+                      <span className="text-sm text-gray-500">
+                        {formatDistanceToNow(new Date(interaction.timestamp), { addSuffix: true })}
+                      </span>
+                      <button
+                        onClick={() => handleEditInteraction(interaction)}
+                        className="text-blue-600 hover:text-blue-800 p-1"
+                        title="Edit interaction"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteInteraction(interaction.id)}
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Delete interaction"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   {(interaction as any).location && (
                     <p className="text-sm text-gray-600 mb-1">
@@ -504,13 +578,14 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                   <DialogHeader>
                     <DialogTitle>Create Task for {contact.first_name}</DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={handleAddTask} className="space-y-4">
+                  <form ref={taskFormRef} onSubmit={handleAddTask} className="space-y-4">
                     <div>
                       <Label htmlFor="task-title">Task Title</Label>
                       <Input
                         id="task-title"
                         name="title"
                         placeholder="Follow up with..."
+                        defaultValue={quickFollowUpData?.title || ''}
                         required
                         className="mt-1"
                       />
@@ -522,6 +597,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                         id="task-description"
                         name="description"
                         placeholder="Any additional details"
+                        defaultValue={quickFollowUpData ? `Quick follow-up with ${contact?.first_name}` : ''}
                         className="mt-1"
                       />
                     </div>
@@ -532,6 +608,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                         <select
                           id="task-priority"
                           name="priority"
+                          defaultValue={quickFollowUpData ? '2' : '0'}
                           className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
                         >
                           <option value="0">Low</option>
@@ -546,6 +623,13 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                           id="task-due-at"
                           type="datetime-local"
                           name="due_at"
+                          defaultValue={
+                            quickFollowUpData
+                              ? addDays(new Date(), quickFollowUpData.daysFromNow)
+                                  .toISOString()
+                                  .slice(0, 16)
+                              : ''
+                          }
                           className="mt-1"
                         />
                       </div>

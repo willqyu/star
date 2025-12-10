@@ -54,3 +54,31 @@ export async function getRecentInteractions(userId: string, limit: number = 10):
   if (error) throw error;
   return data as Interaction[];
 }
+
+export async function updateInteraction(
+  id: string,
+  input: Partial<InteractionInput>
+): Promise<Interaction> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('interactions')
+    .update(input)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Interaction;
+}
+
+export async function deleteInteraction(id: string): Promise<void> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('interactions')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+}

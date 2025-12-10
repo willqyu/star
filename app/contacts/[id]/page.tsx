@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
 import { getContact, deleteContact, listContacts } from '@/app/actions/contacts';
 import { listInteractions, createInteraction, updateInteraction, deleteInteraction } from '@/app/actions/interactions';
-import { listTasks, createTask } from '@/app/actions/tasks';
+import { listTasks, createTask, completeTask } from '@/app/actions/tasks';
 import {
   getAllRelationships,
 } from '@/app/actions/relationships';
@@ -49,6 +49,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
   const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<Interaction>>({});
   const [showTaskDialog, setShowTaskDialog] = useState(false);
+  const [taskTab, setTaskTab] = useState<'open' | 'completed'>('open');
   const [quickFollowUpData, setQuickFollowUpData] = useState<{ daysFromNow: number; title: string } | null>(null);
 
   const interactionFormRef = useRef<HTMLFormElement>(null);
@@ -169,6 +170,18 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
     } catch (error) {
       console.error('Failed to delete interaction:', error);
       toast.error('Failed to delete interaction');
+    }
+  };
+
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      await completeTask(taskId);
+      const updated = await listTasks();
+      setTasks(updated?.filter((t) => t.contact_id === contact!.id) || []);
+      toast.success('Task marked as complete');
+    } catch (error) {
+      console.error('Failed to complete task:', error);
+      toast.error('Failed to complete task');
     }
   };
 
@@ -544,7 +557,31 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
         {/* Related Tasks */}
         <div className="bg-white p-6 rounded-lg border border-border">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Related Tasks</h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg font-bold text-gray-900">Related Tasks</h2>
+              <div className="flex gap-2 border-b border-gray-200">
+                <button
+                  onClick={() => setTaskTab('open')}
+                  className={`pb-2 px-2 font-medium text-sm transition-colors ${
+                    taskTab === 'open'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Open ({tasks.filter((t) => t.status === 'open').length})
+                </button>
+                <button
+                  onClick={() => setTaskTab('completed')}
+                  className={`pb-2 px-2 font-medium text-sm transition-colors ${
+                    taskTab === 'completed'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Completed ({tasks.filter((t) => t.status === 'completed').length})
+                </button>
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -642,36 +679,91 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
             </div>
           </div>
 
-          {tasks.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No tasks yet</p>
-          ) : (
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <div key={task.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-900">{task.title}</h3>
-                      {task.due_at && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          Due: {new Date(task.due_at).toLocaleDateString()}
-                        </p>
-                      )}
+          {taskTab === 'open' ? (
+            tasks.filter((t) => t.status === 'open').length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No open tasks</p>
+            ) : (
+              <div className="space-y-3">
+                {tasks
+                  .filter((t) => t.status === 'open')
+                  .map((task) => (
+                    <div key={task.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{task.title}</h3>
+                          {task.description && (
+                            <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                          )}
+                          {task.due_at && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              Due: {new Date(task.due_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2 items-start">
+                          <span
+                            className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${
+                              task.priority === 2
+                                ? 'bg-red-100 text-red-800'
+                                : task.priority === 1
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {task.priority === 2 ? 'High' : task.priority === 1 ? 'Medium' : 'Low'}
+                          </span>
+                          <button
+                            onClick={() => handleCompleteTask(task.id)}
+                            className="text-green-600 hover:text-green-800 p-1"
+                            title="Mark as complete"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <span
-                      className={`text-xs font-medium px-2 py-1 rounded ${
-                        task.priority === 2
-                          ? 'bg-red-100 text-red-800'
-                          : task.priority === 1
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-green-100 text-green-800'
-                      }`}
-                    >
-                      {task.priority === 2 ? 'High' : task.priority === 1 ? 'Medium' : 'Low'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  ))}
+              </div>
+            )
+          ) : (
+            tasks.filter((t) => t.status === 'completed').length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No completed tasks</p>
+            ) : (
+              <div className="space-y-3">
+                {tasks
+                  .filter((t) => t.status === 'completed')
+                  .map((task) => (
+                    <div key={task.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200 opacity-75">
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900 line-through">{task.title}</h3>
+                          {task.description && (
+                            <p className="text-sm text-gray-600 mt-1 line-through">{task.description}</p>
+                          )}
+                          {task.completed_at && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              Completed: {new Date(task.completed_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${
+                            task.priority === 2
+                              ? 'bg-red-100 text-red-800'
+                              : task.priority === 1
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {task.priority === 2 ? 'High' : task.priority === 1 ? 'Medium' : 'Low'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )
           )}
         </div>
       </main>

@@ -11,7 +11,7 @@ export const ContactFormSchema = z.object({
   linkedin_url: z.string().url('Invalid URL').optional().or(z.literal('')),
   tags: z.array(z.string()).optional(),
   timezone: z.string().optional(),
-  preferred_channel: z.enum(['email', 'phone', 'linkedin', 'in_person']).optional(),
+  preferred_channel: z.enum(['email', 'phone', 'linkedin', 'in_person', 'whatsapp']).optional(),
   notes: z.string().optional(),
   referred_by_id: z.string().uuid().optional().or(z.literal('')),
 });

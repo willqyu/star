@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { ContactFormSchema, ContactInput, Contact } from '@/lib/validation/schemas';
 import { createContact, updateContact, listContacts } from '@/app/actions/contacts';
+import { TIMEZONES } from '@/lib/utils/timezones';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
 
@@ -220,16 +221,12 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
             {...register('timezone')}
             className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
           >
-            <option>UTC</option>
-            <option>America/New_York</option>
-            <option>America/Chicago</option>
-            <option>America/Denver</option>
-            <option>America/Los_Angeles</option>
-            <option>Europe/London</option>
-            <option>Europe/Paris</option>
-            <option>Asia/Tokyo</option>
-            <option>Asia/Hong_Kong</option>
-            <option>Australia/Sydney</option>
+            <option value="">Select a timezone...</option>
+            {TIMEZONES.map((tz) => (
+              <option key={tz.code} value={tz.code}>
+                {tz.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -244,6 +241,7 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
             <option value="email">Email</option>
             <option value="phone">Phone</option>
             <option value="linkedin">LinkedIn</option>
+            <option value="whatsapp">WhatsApp</option>
             <option value="in_person">In Person</option>
           </select>
         </div>

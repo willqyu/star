@@ -6,7 +6,7 @@ import { Toaster } from 'sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'STAR: Personal CRM',
+  title: 'STAR',
   description: 'Manage your personal relationships and interactions',
   icons: {
     icon: '/favicon.ico',

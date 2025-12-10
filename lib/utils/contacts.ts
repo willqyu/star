@@ -1,10 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { Contact, ContactInput } from '@/lib/validation/schemas';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/database.types';
 
-export async function getContacts(userId: string): Promise<Contact[]> {
-  const supabase = await createClient();
+export async function getContacts(userId: string, supabase?: SupabaseClient<Database>): Promise<Contact[]> {
+  // If no supabase client provided, create one (for non-cached calls)
+  const client = supabase || await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('contacts')
     .select('*')
     .eq('user_id', userId)

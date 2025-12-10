@@ -366,6 +366,16 @@ export async function getNetworkStats(contactId: string) {
 export async function getAllNetworkRelationships() {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    console.error('Not authenticated');
+    return [];
+  }
+
   const { data: relationships, error } = await supabase
     .from('contact_relationships')
     .select(
@@ -391,12 +401,13 @@ export async function getAllNetworkRelationships() {
       )
     `
     )
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching all relationships:', error);
-    throw error;
+    return [];
   }
 
-  return relationships;
+  return relationships || [];
 }

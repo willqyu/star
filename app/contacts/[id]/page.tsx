@@ -13,13 +13,11 @@ import { listInteractions, createInteraction } from '@/app/actions/interactions'
 import { listTasks, createTask } from '@/app/actions/tasks';
 import {
   getAllRelationships,
-  getNetworkGraphData,
-  getNetworkStats,
 } from '@/app/actions/relationships';
 import { Contact, Interaction, Task, ContactRelationship } from '@/lib/validation/schemas';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
-import { ArrowLeft, Edit2, Trash2, Plus, Network } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +26,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { RelationshipManager } from '@/components/relationship-manager';
-import { NetworkGraph } from '@/components/network-graph';
 
 interface ContactDetailPageProps {
   params: {
@@ -44,13 +41,10 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
   const [relationships, setRelationships] = useState<
     Array<ContactRelationship & { from_contact?: Contact; to_contact?: Contact }>
   >([]);
-  const [networkGraphData, setNetworkGraphData] = useState<any>(null);
-  const [networkStats, setNetworkStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [showInteractionDialog, setShowInteractionDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
-  const [showNetworkDialog, setShowNetworkDialog] = useState(false);
 
   const router = useRouter();
 
@@ -63,16 +57,12 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
           taskData,
           allContactsData,
           relationshipsData,
-          graphData,
-          statsData,
         ] = await Promise.all([
           getContact(params.id),
           listInteractions(params.id),
           listTasks(),
           listContacts(),
           getAllRelationships(params.id),
-          getNetworkGraphData(params.id),
-          getNetworkStats(params.id),
         ]);
 
         setContact(contactData);
@@ -80,8 +70,6 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
         setTasks(taskData?.filter((t) => t.contact_id === params.id) || []);
         setAllContacts(allContactsData || []);
         setRelationships(relationshipsData || []);
-        setNetworkGraphData(graphData);
-        setNetworkStats(statsData);
       } catch (error) {
         console.error('Failed to load contact:', error);
         toast.error('Failed to load contact');
@@ -362,57 +350,6 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
             onRelationshipDeleted={handleRelationshipChange}
           />
         </div>
-
-        {/* Network Statistics and Graph */}
-        {networkStats && (
-          <div className="bg-white p-6 rounded-lg border border-border mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold text-gray-900">Network Overview</h2>
-              <Dialog open={showNetworkDialog} onOpenChange={setShowNetworkDialog}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Network className="w-4 h-4 mr-2" />
-                    View Graph
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl">
-                  <DialogHeader>
-                    <DialogTitle>Network Visualization</DialogTitle>
-                  </DialogHeader>
-                  {networkGraphData && (
-                    <NetworkGraph
-                      nodes={networkGraphData.nodes}
-                      edges={networkGraphData.edges}
-                      targetContactId={contact.id}
-                      interactive={true}
-                    />
-                  )}
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">{networkStats.totalConnections}</p>
-                <p className="text-sm text-gray-600">Total Connections</p>
-              </div>
-              <div className="p-3 bg-green-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">{networkStats.peopleTheyKnow}</p>
-                <p className="text-sm text-gray-600">People They Know</p>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <p className="text-2xl font-bold text-purple-600">
-                  {networkStats.peopleWhoKnowThem}
-                </p>
-                <p className="text-sm text-gray-600">People Who Know Them</p>
-              </div>
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <p className="text-2xl font-bold text-orange-600">{networkStats.referrersCount}</p>
-                <p className="text-sm text-gray-600">Referrers</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Interactions */}
         <div className="bg-white p-6 rounded-lg border border-border mb-8">

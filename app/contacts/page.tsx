@@ -72,7 +72,35 @@ export default function ContactsPage() {
       <>
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-center text-gray-500">Loading contacts...</p>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
+              <p className="text-gray-600 mt-1">Manage and track your relationships</p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/contacts/new">
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Contact
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="mb-6 relative">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search contacts by name, email, or company..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              disabled
+            />
+          </div>
+
+          <div className="text-center py-12 bg-white rounded-lg border border-border">
+            <p className="text-gray-500">Loading contacts...</p>
+          </div>
         </main>
       </>
     );
@@ -165,14 +193,11 @@ export default function ContactsPage() {
                 )}
 
                 <div className="mt-4 pt-4 border-t border-border">
-                  <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span>Score: {contact.relationship_score}</span>
-                    {contact.last_interaction_at && (
-                      <span>
-                        Last: {formatDistanceToNow(new Date(contact.last_interaction_at), { addSuffix: true })}
-                      </span>
-                    )}
-                  </div>
+                  {contact.last_interaction_at && (
+                    <p className="text-xs text-gray-500">
+                      Last: {formatDistanceToNow(new Date(contact.last_interaction_at), { addSuffix: true })}
+                    </p>
+                  )}
                 </div>
               </Link>
             ))}

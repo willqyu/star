@@ -55,6 +55,8 @@ export async function createContact(
     ...contactData,
     email: contactData.email && contactData.email.trim() ? contactData.email.trim() : null,
     linkedin_url: contactData.linkedin_url && contactData.linkedin_url.trim() ? contactData.linkedin_url.trim() : null,
+    twitter_url: contactData.twitter_url && contactData.twitter_url.trim() ? contactData.twitter_url.trim() : null,
+    website_url: contactData.website_url && contactData.website_url.trim() ? contactData.website_url.trim() : null,
   };
 
   const { data, error } = await supabase
@@ -117,6 +119,10 @@ export async function updateContact(id: string, input: Partial<ContactInput>): P
       cleanedData.email = value && typeof value === 'string' && value.trim() ? value.trim() : null;
     } else if (key === 'linkedin_url') {
       cleanedData.linkedin_url = value && typeof value === 'string' && value.trim() ? value.trim() : null;
+    } else if (key === 'twitter_url') {
+      cleanedData.twitter_url = value && typeof value === 'string' && value.trim() ? value.trim() : null;
+    } else if (key === 'website_url') {
+      cleanedData.website_url = value && typeof value === 'string' && value.trim() ? value.trim() : null;
     } else if (value !== undefined) {
       cleanedData[key] = value;
     }

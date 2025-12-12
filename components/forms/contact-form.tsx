@@ -40,6 +40,8 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
       email: '',
       phone: '',
       linkedin_url: '',
+      twitter_url: '',
+      website_url: '',
       timezone: 'UTC',
       preferred_channel: 'email',
       notes: '',
@@ -83,14 +85,14 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
       };
 
       if (mode === 'create') {
-        await createContact(formData);
+        const createdContact = await createContact(formData);
         toast.success('Contact created successfully');
+        router.push(`/contacts/${createdContact.id}`);
       } else if (contact) {
         await updateContact(contact.id, formData);
         toast.success('Contact updated successfully');
+        router.push(`/contacts/${contact.id}`);
       }
-
-      router.push('/contacts');
     } catch (error) {
       console.error('Form submission error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to save contact');
@@ -199,6 +201,30 @@ export function ContactForm({ contact, mode }: ContactFormProps) {
           placeholder="https://linkedin.com/in/johndoe"
           disabled={loading}
           {...register('linkedin_url')}
+          className="mt-1"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="twitter_url">Twitter URL</Label>
+        <Input
+          id="twitter_url"
+          type="url"
+          placeholder="https://twitter.com/johndoe"
+          disabled={loading}
+          {...register('twitter_url')}
+          className="mt-1"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="website_url">Personal Website</Label>
+        <Input
+          id="website_url"
+          type="url"
+          placeholder="https://johndoe.com"
+          disabled={loading}
+          {...register('website_url')}
           className="mt-1"
         />
       </div>

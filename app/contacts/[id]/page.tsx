@@ -27,6 +27,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { RelationshipManager } from '@/components/relationship-manager';
+import { LinkifiedText } from '@/components/linkified-text';
 
 interface ContactDetailPageProps {
   params: Promise<{
@@ -340,6 +341,34 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                 </div>
               )}
 
+              {contact.twitter_url && (
+                <div>
+                  <p className="text-sm text-gray-500">Twitter</p>
+                  <a
+                    href={contact.twitter_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    @{contact.twitter_url.split('/').pop()}
+                  </a>
+                </div>
+              )}
+
+              {contact.website_url && (
+                <div>
+                  <p className="text-sm text-gray-500">Website</p>
+                  <a
+                    href={contact.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Visit Website
+                  </a>
+                </div>
+              )}
+
               <div>
                 <p className="text-sm text-gray-500">Preferred Channel</p>
                 <p className="text-gray-900 capitalize">{contact.preferred_channel}</p>
@@ -410,7 +439,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
         {contact.notes && (
           <div className="bg-white p-6 rounded-lg border border-border mb-8">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Notes</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{contact.notes}</p>
+            <LinkifiedText text={contact.notes} />
           </div>
         )}
 

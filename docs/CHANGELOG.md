@@ -5,6 +5,30 @@ All notable changes to Personal CRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### ✨ Added
+
+#### Contact Enhancement
+- **Social Media & Website Fields**: Extended contact information
+  - Twitter URL field for contact's Twitter profile
+  - Personal Website URL field for contact's personal/professional website
+  - Both fields default to null and are completely optional
+  - Full support in contact creation, editing, and detail views
+  - Clickable links on contact detail page with proper target="_blank" handling
+- **Improved Contact Creation Flow**: After creating a new contact, users are redirected to the contact detail page instead of the contacts list
+- **Quick Add Contact Button**: New "Add Contact" button in navbar for quick access to contact creation from any page
+
+### 🔧 Technical
+
+#### Database
+- **Migration 004**: Added `twitter_url` and `website_url` columns to contacts table with indexes
+- **Type Updates**: Updated TypeScript types for new contact fields
+- **Validation**: Extended Zod schemas to support URL validation for new fields
+- **Backend Utilities**: Updated contact creation and update utilities to properly handle new fields
+
+---
+
 ## [1.0.0] - 2024
 
 ### ✨ Added

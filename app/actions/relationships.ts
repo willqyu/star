@@ -9,8 +9,8 @@ import { ContactRelationship, ContactRelationshipInput } from '@/lib/validation/
 export async function getBacklinks(contactId: string) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('contact_relationships')
+  const { data, error } = await (supabase
+    .from('contact_relationships') as any)
     .select(
       `
       id,
@@ -46,15 +46,15 @@ export async function getBacklinks(contactId: string) {
 export async function getKnownContacts(contactId: string) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('contact_relationships')
+  const { data, error } = await (supabase
+    .from('contact_relationships') as any)
     .select(
       `
       id,
       relationship_type,
       notes,
       created_at,
-      to_contact_id,
+      from_contact_id,
       to_contact:to_contact_id (
         id,
         first_name,
@@ -82,8 +82,8 @@ export async function getKnownContacts(contactId: string) {
 export async function getAllRelationships(contactId: string) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('contact_relationships')
+  const { data, error } = await (supabase
+    .from('contact_relationships') as any)
     .select(
       `
       id,
@@ -186,7 +186,7 @@ export async function updateRelationship(
 export async function deleteRelationship(relationshipId: string) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('contact_relationships').delete().eq('id', relationshipId);
+  const { error } = await (supabase.from('contact_relationships') as any).delete().eq('id', relationshipId);
 
   if (error) {
     console.error('Error deleting relationship:', error);
@@ -319,8 +319,8 @@ export async function getNetworkStats(contactId: string) {
     // If the function doesn't exist, calculate manually
     console.warn('get_network_stats function not found, calculating manually');
 
-    const { data: relationships } = await supabase
-      .from('contact_relationships')
+    const { data: relationships } = await (supabase
+      .from('contact_relationships') as any)
       .select('from_contact_id, to_contact_id, relationship_type')
       .or(`from_contact_id.eq.${contactId},to_contact_id.eq.${contactId}`);
 
@@ -376,8 +376,8 @@ export async function getAllNetworkRelationships() {
     return [];
   }
 
-  const { data: relationships, error } = await supabase
-    .from('contact_relationships')
+  const { data: relationships, error } = await (supabase
+    .from('contact_relationships') as any)
     .select(
       `
       id,

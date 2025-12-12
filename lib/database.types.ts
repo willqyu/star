@@ -20,6 +20,8 @@ export type Database = {
           email: string | null;
           phone: string | null;
           linkedin_url: string | null;
+          twitter_url: string | null;
+          website_url: string | null;
           tags: string[];
           relationship_score: number;
           met_at: string | null;
@@ -40,6 +42,8 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           linkedin_url?: string | null;
+          twitter_url?: string | null;
+          website_url?: string | null;
           tags?: string[];
           relationship_score?: number;
           met_at?: string | null;
@@ -58,6 +62,8 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           linkedin_url?: string | null;
+          twitter_url?: string | null;
+          website_url?: string | null;
           tags?: string[];
           relationship_score?: number;
           met_at?: string | null;

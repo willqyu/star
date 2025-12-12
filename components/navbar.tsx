@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, CheckSquare, Settings, BarChart3, LogOut } from 'lucide-react';
+import { Users, CheckSquare, Settings, BarChart3, LogOut, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
@@ -79,15 +79,23 @@ export function Navbar() {
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="flex items-center gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/contacts/new">
+              <Button size="sm" variant="outline" className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Contact
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
     </nav>

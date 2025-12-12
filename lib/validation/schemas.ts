@@ -9,6 +9,8 @@ export const ContactFormSchema = z.object({
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   phone: z.string().optional(),
   linkedin_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  twitter_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  website_url: z.string().url('Invalid URL').optional().or(z.literal('')),
   tags: z.array(z.string()).optional(),
   timezone: z.string().optional(),
   preferred_channel: z.enum(['email', 'phone', 'linkedin', 'in_person', 'whatsapp']).optional(),

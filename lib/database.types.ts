@@ -114,6 +114,7 @@ export type Database = {
           description: string | null;
           due_at: string | null;
           status: string;
+          task_status: string;
           priority: number;
           auto_generated: boolean;
           created_at: string;
@@ -128,6 +129,7 @@ export type Database = {
           description?: string | null;
           due_at?: string | null;
           status?: string;
+          task_status?: string;
           priority?: number;
           auto_generated?: boolean;
           created_at?: string;
@@ -139,6 +141,7 @@ export type Database = {
           description?: string | null;
           due_at?: string | null;
           status?: string;
+          task_status?: string;
           priority?: number;
           completed_at?: string | null;
           updated_at?: string;

@@ -4,7 +4,7 @@ import { listTasks } from '@/app/actions/tasks';
 import { listRecentInteractions } from '@/app/actions/interactions';
 import { Button } from '@/components/ui/button';
 import { QuickInteractionLogger } from '@/components/quick-interaction-logger';
-import { ContactNameTag } from '@/components/contact-name-tag';
+import { DashboardTaskList } from '@/components/dashboard-task-list';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Plus, Calendar, MessageSquare, Phone } from 'lucide-react';
@@ -82,45 +82,7 @@ export default async function DashboardPage() {
             {upcomingTasks.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No upcoming tasks</p>
             ) : (
-              <div className="space-y-4">
-                {upcomingTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-start justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{task.title}</h3>
-                      {task.due_at && (
-                        <p className="text-sm text-gray-500">
-                          Due {formatDistanceToNow(new Date(task.due_at), { addSuffix: true })}
-                        </p>
-                      )}
-                      {task.contacts && (
-                        <div className="mt-2">
-                          <ContactNameTag
-                            contactId={task.contacts.id}
-                            firstName={task.contacts.first_name}
-                            lastName={task.contacts.last_name}
-                            company={task.contacts.company}
-                            role={task.contacts.role}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        task.priority === 2
-                          ? 'bg-red-100 text-red-800'
-                          : task.priority === 1
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-green-100 text-green-800'
-                      }`}
-                    >
-                      {task.priority === 2 ? 'High' : task.priority === 1 ? 'Medium' : 'Low'}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <DashboardTaskList tasks={upcomingTasks} />
             )}
           </div>
 

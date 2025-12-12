@@ -58,6 +58,7 @@ export const TaskFormSchema = z.object({
   due_at: z.date().optional(),
   priority: z.number().min(0).max(2).optional(),
   status: z.enum(['open', 'completed', 'snoozed', 'cancelled']).optional(),
+  task_status: z.enum(['waiting_for_them', 'waiting_for_me', 'on_hold']).optional(),
 });
 
 export const TaskSchema = TaskFormSchema.extend({
@@ -65,6 +66,7 @@ export const TaskSchema = TaskFormSchema.extend({
   user_id: z.string().uuid(),
   auto_generated: z.boolean(),
   status: z.enum(['open', 'completed', 'snoozed', 'cancelled']),
+  task_status: z.enum(['waiting_for_them', 'waiting_for_me', 'on_hold']),
   priority: z.number().min(0).max(2),
   created_at: z.date(),
   updated_at: z.date(),

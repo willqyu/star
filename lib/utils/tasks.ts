@@ -59,6 +59,7 @@ export async function createTask(userId: string, input: TaskInput): Promise<Task
       ...input,
       user_id: userId,
       status: 'open',
+      task_status: input.task_status ?? 'waiting_for_them',
       priority: input.priority ?? 0,
     })
     .select()

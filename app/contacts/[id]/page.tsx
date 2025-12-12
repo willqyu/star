@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { RelationshipManager } from '@/components/relationship-manager';
 import { LinkifiedText } from '@/components/linkified-text';
+import { TaskStatusTag } from '@/components/task-status-tag';
 
 interface ContactDetailPageProps {
   params: Promise<{
@@ -723,7 +724,21 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                             </p>
                           )}
                         </div>
-                        <div className="flex gap-2 items-start">
+                        <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                          <TaskStatusTag
+                            taskId={task.id}
+                            taskStatus={task.task_status as 'waiting_for_them' | 'waiting_for_me' | 'on_hold'}
+                            onStatusChange={(newStatus) => {
+                              setTasks((prev) =>
+                                prev.map((t) =>
+                                  t.id === task.id
+                                    ? { ...t, task_status: newStatus }
+                                    : t
+                                )
+                              );
+                            }}
+                            compact
+                          />
                           <span
                             className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${
                               task.priority === 2
@@ -771,11 +786,27 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                             </p>
                           )}
                         </div>
-                        <span
-                          className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${
-                            task.priority === 2
-                              ? 'bg-red-100 text-red-800'
-                              : task.priority === 1
+                        <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                          <TaskStatusTag
+                            taskId={task.id}
+                            taskStatus={task.task_status as 'waiting_for_them' | 'waiting_for_me' | 'on_hold'}
+                            onStatusChange={(newStatus) => {
+                              setTasks((prev) =>
+                                prev.map((t) =>
+                                  t.id === task.id
+                                    ? { ...t, task_status: newStatus }
+                                    : t
+                                )
+                              );
+                            }}
+                            compact
+                            isClickable={false}
+                          />
+                          <span
+                            className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${
+                              task.priority === 2
+                                ? 'bg-red-100 text-red-800'
+                                : task.priority === 1
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-green-100 text-green-800'
                           }`}

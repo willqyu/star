@@ -20,6 +20,7 @@ export default function NewTaskPage() {
   const [contactId, setContactId] = useState('');
   const [dueAt, setDueAt] = useState('');
   const [priority, setPriority] = useState('0');
+  const [taskStatus, setTaskStatus] = useState('waiting_for_them');
   const [loading, setLoading] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
 
@@ -47,6 +48,7 @@ export default function NewTaskPage() {
         contact_id: contactId || undefined,
         due_at: dueAt ? new Date(dueAt) : undefined,
         priority: parseInt(priority),
+        task_status: taskStatus as 'waiting_for_them' | 'waiting_for_me' | 'on_hold',
       });
 
       toast.success('Task created successfully');
@@ -137,6 +139,21 @@ export default function NewTaskPage() {
                 <option value="2">High</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="task-status">Task Status</Label>
+            <select
+              id="task-status"
+              value={taskStatus}
+              onChange={(e) => setTaskStatus(e.target.value)}
+              disabled={loading}
+              className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
+            >
+              <option value="waiting_for_them">Waiting for them</option>
+              <option value="waiting_for_me">Waiting for me</option>
+              <option value="on_hold">On Hold</option>
+            </select>
           </div>
 
           <div className="flex gap-4 pt-4">

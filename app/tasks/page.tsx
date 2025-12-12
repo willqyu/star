@@ -14,6 +14,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
 import { ContactNameTag } from '@/components/contact-name-tag';
+import { TaskStatusTag } from '@/components/task-status-tag';
 import {
   Dialog,
   DialogContent,
@@ -104,6 +105,7 @@ export default function TasksPage() {
       priority: task.priority,
       due_at: task.due_at ? new Date(task.due_at).toISOString().slice(0, 16) : '',
       status: task.status,
+      task_status: task.task_status,
     });
   };
 
@@ -118,6 +120,7 @@ export default function TasksPage() {
         priority: parseInt(editFormData.priority),
         due_at: editFormData.due_at ? new Date(editFormData.due_at) : undefined,
         status: editFormData.status,
+        task_status: editFormData.task_status as 'waiting_for_them' | 'waiting_for_me' | 'on_hold',
       });
 
       setTasks((prev) =>
@@ -249,6 +252,20 @@ export default function TasksPage() {
                             Auto
                           </span>
                         )}
+
+                        <TaskStatusTag
+                          taskId={task.id}
+                          taskStatus={task.task_status as 'waiting_for_them' | 'waiting_for_me' | 'on_hold'}
+                          onStatusChange={(newStatus) => {
+                            setTasks((prev) =>
+                              prev.map((t) =>
+                                t.id === task.id
+                                  ? { ...t, task_status: newStatus }
+                                  : t
+                              )
+                            );
+                          }}
+                        />
 
                         {task.contacts && (
                           <ContactNameTag
@@ -387,6 +404,22 @@ export default function TasksPage() {
                   <option value="completed">Completed</option>
                   <option value="snoozed">Snoozed</option>
                   <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-task-status">Task Status</Label>
+                <select
+                  id="edit-task-status"
+                  value={editFormData.task_status}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, task_status: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
+                >
+                  <option value="waiting_for_them">Waiting for them</option>
+                  <option value="waiting_for_me">Waiting for me</option>
+                  <option value="on_hold">On Hold</option>
                 </select>
               </div>
 

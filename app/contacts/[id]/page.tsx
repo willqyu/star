@@ -807,12 +807,13 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
                               task.priority === 2
                                 ? 'bg-red-100 text-red-800'
                                 : task.priority === 1
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}
-                        >
-                          {task.priority === 2 ? 'High' : task.priority === 1 ? 'Medium' : 'Low'}
-                        </span>
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {task.priority === 2 ? 'High' : task.priority === 1 ? 'Medium' : 'Low'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}

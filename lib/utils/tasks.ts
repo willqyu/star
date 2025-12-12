@@ -6,7 +6,16 @@ export async function getTasks(userId: string, status?: string): Promise<Task[]>
 
   let query = supabase
     .from('tasks')
-    .select('*')
+    .select(`
+      *,
+      contacts (
+        id,
+        first_name,
+        last_name,
+        company,
+        role
+      )
+    `)
     .eq('user_id', userId);
 
   if (status) {
@@ -24,7 +33,16 @@ export async function getTaskById(id: string): Promise<Task | null> {
 
   const { data, error } = await supabase
     .from('tasks')
-    .select('*')
+    .select(`
+      *,
+      contacts (
+        id,
+        first_name,
+        last_name,
+        company,
+        role
+      )
+    `)
     .eq('id', id)
     .single();
 

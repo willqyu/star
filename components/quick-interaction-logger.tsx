@@ -129,6 +129,7 @@ export function QuickInteractionLogger({ contacts, onInteractionCreated }: Quick
               name="notes"
               placeholder="What did you discuss?"
               required
+              rows={6}
               className="mt-1"
             />
           </div>

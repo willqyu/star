@@ -69,6 +69,13 @@ export const TaskSchema = TaskFormSchema.extend({
   created_at: z.date(),
   updated_at: z.date(),
   completed_at: z.date().nullable().optional(),
+  contacts: z.object({
+    id: z.string().uuid(),
+    first_name: z.string(),
+    last_name: z.string(),
+    company: z.string().nullable().optional(),
+    role: z.string().nullable().optional(),
+  }).nullable().optional(),
 });
 
 export type Task = z.infer<typeof TaskSchema>;
@@ -133,7 +140,7 @@ export type UserSettingsInput = z.infer<typeof UserSettingsUpdateSchema>;
 export const ContactRelationshipFormSchema = z.object({
   from_contact_id: z.string().uuid('From contact is required'),
   to_contact_id: z.string().uuid('To contact is required'),
-  relationship_type: z.enum(['referred_by', 'knows', 'works_with', 'friend']),
+  relationship_type: z.enum(['referred_by', 'referred', 'knows', 'works_with', 'friend']),
   notes: z.string().optional(),
 });
 

@@ -13,6 +13,7 @@ import { Task } from '@/lib/validation/schemas';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
+import { ContactHoverCard } from '@/components/contact-hover-card';
 import {
   Dialog,
   DialogContent,
@@ -247,6 +248,10 @@ export default function TasksPage() {
                           <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
                             Auto
                           </span>
+                        )}
+
+                        {task.contacts && (
+                          <ContactHoverCard contact={task.contacts} />
                         )}
                       </div>
                     </div>

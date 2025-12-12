@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -132,6 +133,7 @@ export function RelationshipManager({
 
   const relationshipTypeLabels: Record<string, string> = {
     referred_by: 'Referred by',
+    referred: 'Referred',
     knows: 'Knows',
     works_with: 'Works with',
     friend: 'Friend',
@@ -208,10 +210,16 @@ export function RelationshipManager({
                   }
                   className="w-full px-3 py-2 border border-input rounded-md bg-white mt-1"
                 >
-                  <option value="knows">Knows</option>
-                  <option value="works_with">Works with</option>
-                  <option value="friend">Friend</option>
-                  <option value="referred_by">Referred by</option>
+                  {formData.direction === 'incoming' ? (
+                    <option value="referred_by">Referred by</option>
+                  ) : (
+                    <>
+                      <option value="knows">Knows</option>
+                      <option value="referred">Referred</option>
+                      <option value="works_with">Works with</option>
+                      <option value="friend">Friend</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -252,11 +260,13 @@ export function RelationshipManager({
               <Card key={rel.id} className="p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">
-                      {rel.from_contact?.first_name} {rel.from_contact?.last_name}
-                    </p>
+                    <Link href={`/contacts/${rel.from_contact?.id}`}>
+                      <p className="font-medium text-sm text-blue-600 hover:underline cursor-pointer">
+                        {rel.from_contact?.first_name} {rel.from_contact?.last_name}
+                      </p>
+                    </Link>
                     <p className="text-xs text-gray-500">
-                      {relationshipTypeLabels[rel.relationship_type]}
+                      {rel.relationship_type === 'referred_by' ? 'Referred by' : relationshipTypeLabels[rel.relationship_type]}
                       {rel.from_contact?.company ? ` • ${rel.from_contact.company}` : ''}
                     </p>
                     {rel.notes && <p className="text-xs text-gray-600 mt-1">{rel.notes}</p>}
@@ -287,15 +297,17 @@ export function RelationshipManager({
       {/* Outgoing Relationships */}
       {outgoingRels.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-700">Who they know</h4>
+          <h4 className="text-sm font-medium text-gray-700">Who they know or referred</h4>
           <div className="space-y-2">
             {outgoingRels.map((rel) => (
               <Card key={rel.id} className="p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">
-                      {rel.to_contact?.first_name} {rel.to_contact?.last_name}
-                    </p>
+                    <Link href={`/contacts/${rel.to_contact?.id}`}>
+                      <p className="font-medium text-sm text-blue-600 hover:underline cursor-pointer">
+                        {rel.to_contact?.first_name} {rel.to_contact?.last_name}
+                      </p>
+                    </Link>
                     <p className="text-xs text-gray-500">
                       {relationshipTypeLabels[rel.relationship_type]}
                       {rel.to_contact?.company ? ` • ${rel.to_contact.company}` : ''}

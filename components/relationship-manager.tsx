@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +16,7 @@ import { Card } from '@/components/ui/card';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
+import { ContactNameTag } from '@/components/contact-name-tag';
 import {
   createRelationship,
   deleteRelationship,
@@ -260,12 +260,15 @@ export function RelationshipManager({
               <Card key={rel.id} className="p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <Link href={`/contacts/${rel.from_contact?.id}`}>
-                      <p className="font-medium text-sm text-blue-600 hover:underline cursor-pointer">
-                        {rel.from_contact?.first_name} {rel.from_contact?.last_name}
-                      </p>
-                    </Link>
-                    <p className="text-xs text-gray-500">
+                    <ContactNameTag
+                      contactId={rel.from_contact?.id || ''}
+                      firstName={rel.from_contact?.first_name || ''}
+                      lastName={rel.from_contact?.last_name || ''}
+                      company={rel.from_contact?.company}
+                      role={rel.from_contact?.role}
+                      variant="card"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
                       {rel.relationship_type === 'referred_by' ? 'Referred by' : relationshipTypeLabels[rel.relationship_type]}
                       {rel.from_contact?.company ? ` • ${rel.from_contact.company}` : ''}
                     </p>
@@ -303,12 +306,15 @@ export function RelationshipManager({
               <Card key={rel.id} className="p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <Link href={`/contacts/${rel.to_contact?.id}`}>
-                      <p className="font-medium text-sm text-blue-600 hover:underline cursor-pointer">
-                        {rel.to_contact?.first_name} {rel.to_contact?.last_name}
-                      </p>
-                    </Link>
-                    <p className="text-xs text-gray-500">
+                    <ContactNameTag
+                      contactId={rel.to_contact?.id || ''}
+                      firstName={rel.to_contact?.first_name || ''}
+                      lastName={rel.to_contact?.last_name || ''}
+                      company={rel.to_contact?.company}
+                      role={rel.to_contact?.role}
+                      variant="card"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
                       {relationshipTypeLabels[rel.relationship_type]}
                       {rel.to_contact?.company ? ` • ${rel.to_contact.company}` : ''}
                     </p>

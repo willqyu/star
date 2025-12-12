@@ -13,7 +13,7 @@ import { Task } from '@/lib/validation/schemas';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { useCtrlEnter } from '@/lib/hooks/useCtrlEnter';
-import { ContactHoverCard } from '@/components/contact-hover-card';
+import { ContactNameTag } from '@/components/contact-name-tag';
 import {
   Dialog,
   DialogContent,
@@ -251,7 +251,13 @@ export default function TasksPage() {
                         )}
 
                         {task.contacts && (
-                          <ContactHoverCard contact={task.contacts} />
+                          <ContactNameTag
+                            contactId={task.contacts.id}
+                            firstName={task.contacts.first_name}
+                            lastName={task.contacts.last_name}
+                            company={task.contacts.company}
+                            role={task.contacts.role}
+                          />
                         )}
                       </div>
                     </div>

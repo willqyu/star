@@ -4,6 +4,7 @@ import { listTasks } from '@/app/actions/tasks';
 import { listRecentInteractions } from '@/app/actions/interactions';
 import { Button } from '@/components/ui/button';
 import { QuickInteractionLogger } from '@/components/quick-interaction-logger';
+import { ContactNameTag } from '@/components/contact-name-tag';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Plus, Calendar, MessageSquare, Phone } from 'lucide-react';
@@ -93,6 +94,17 @@ export default async function DashboardPage() {
                         <p className="text-sm text-gray-500">
                           Due {formatDistanceToNow(new Date(task.due_at), { addSuffix: true })}
                         </p>
+                      )}
+                      {task.contacts && (
+                        <div className="mt-2">
+                          <ContactNameTag
+                            contactId={task.contacts.id}
+                            firstName={task.contacts.first_name}
+                            lastName={task.contacts.last_name}
+                            company={task.contacts.company}
+                            role={task.contacts.role}
+                          />
+                        </div>
                       )}
                     </div>
                     <div
